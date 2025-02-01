@@ -23,8 +23,6 @@ enum class Instruction {
 // VM Class
 class VM {
 public:
-    void showHelp();
-    void showHexDump();
     VM();                                 // Constructor
     ~VM();                                // Destructor
 
@@ -33,22 +31,29 @@ public:
     void execute();                       // Execute the loaded machine code
     void reset();                         // Reset the VM state for reuse
     void emitDebugInfo();           // Print debug information about the loaded machine code
-    void emitExecutionStats();           // Emit profiling stats
+
+    void loadLibrary(const std::string& dllPath); // Load external DLL
     void setHandler(std::string instruction, std::function<void()> handler); // Set custom handler for an instruction
 
     void startThreadedExecution(); // Start multi-threaded execution of loaded code
 
     void trackExecutionTime(); // Track execution time for profiling
+    void emitExecutionStats(); // Emit profiling stats
+
     void handleCustomInstruction(Instruction instruction); // Handle custom instructions
 
+    void showHelp();
+    void showHexDump();
+
 private:
-    std::string filename;              // Name of the loaded executable file
     std::vector<uint8_t> machineCode;     // Stores loaded machine code (up to 200 MB)
     void* execMemory;                     // Pointer to allocated executable memory
     size_t maxMemorySize;                 // Maximum memory size for the VM
     std::map<Instruction, int> instructionCount; // Profiling: instruction execution counts
     std::map<std::string, std::function<void()>> instructionHandlers; // Custom instruction handlers
     std::mutex vmMutex;                   // Mutex for thread synchronization
+
+    std::string filename; // Add filename as a member variable
 
     void allocateExecMemory(size_t size); // Allocate executable memory
     void releaseExecMemory();             // Release allocated memory
