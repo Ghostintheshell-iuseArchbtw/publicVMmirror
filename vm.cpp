@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 #include <iomanip>
+#include <intrin.h>
 
 namespace myobfuscationvm {
 
@@ -339,14 +340,6 @@ void VM::trackExecutionTime() {
     std::cout << "\nExecution time: " << duration.count() << " ms\n";
 }
 
-// Emit execution stats (e.g., instruction counts)
-void VM::emitExecutionStats() {
-        for (const auto& entry : instructionCount) {
-        std::cout << "Instruction " << static_cast<int>(entry.first) 
-                 << ": " << entry.second << " executions\n";
-    }
-    }
-}
 
 // Add new handler functions
 void VM::handleEncryption(uint32_t& ip, std::vector<uint32_t>& stack) {
@@ -368,8 +361,15 @@ void VM::handleProcessInjection(uint32_t& ip, std::vector<uint32_t>& stack) {
 void VM::handleAntiDetection(uint32_t& ip) {
     // Basic anti-VM detection
     bool isVM = false;
-    char vendor[13];
-    __cpuid((int*)vendor, 0);
+    int cpuInfo[4] = {0};
+    char vendor[13] = {0};
+    
+    __cpuid(cpuInfo, 0);
+    memcpy(vendor, &cpuInfo[1], 4);
+    memcpy(vendor + 4, &cpuInfo[3], 4);
+    memcpy(vendor + 8, &cpuInfo[2], 4);
+    vendor[12] = '\0';
+    
     if (strcmp(vendor, "VMwareVMware") == 0 || 
         strcmp(vendor, "Microsoft Hv") == 0) {
         isVM = true;
@@ -391,8 +391,16 @@ void VM::handleSleep(uint32_t& ip) {
     ip++;
 }
 
-// namespace myobfuscationvm
+// Emit execution stats (e.g., instruction counts)
+void VM::emitExecutionStats() {
+        for (const auto& entry : instructionCount) {
+        std::cout << "Instruction " << static_cast<int>(entry.first) 
+                 << ": " << entry.second << " executions\n";
+    }
+    }
+} // namespace myobfuscationvm
 
+// Keep main outside namespace
 int main(int argc, char* argv[]) {
     myobfuscationvm::VM vm;
     vm.init();
@@ -413,4 +421,3 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 }
-
