@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <windows.h>
+#include <winbase.h>
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -39,7 +40,7 @@ const std::map<std::string, Instruction> asmMap = {
 };
 
 // Constructor
-VM::VM() : execMemory(nullptr), maxMemorySize(200 * 1024 * 1024) {
+VM::VM() : execMemory(nullptr), maxMemorySize(200 * 1024 * 1024), filename("") {
     init();
 }
 
@@ -87,8 +88,9 @@ void VM::releaseExecMemory() {
 }
 
 // Load executable machine code from a file
-void VM::loadExecutable(const std::string& filename) {
+void VM::loadExecutable(const std::string& fname) {
     std::lock_guard<std::mutex> lock(vmMutex);
+    filename = fname;  // Store the filename
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
 
     if (!file.is_open())
