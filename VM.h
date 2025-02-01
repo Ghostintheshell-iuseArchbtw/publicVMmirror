@@ -10,14 +10,51 @@
 #include <chrono>
 #include <windows.h>
 #include <mutex>
+#include <random>
+#include <algorithm>
 
 namespace myobfuscationvm {
 
-// Proprietary instruction set (custom, obfuscated instructions)
+// Forward declarations
+class VM;
+
+// Proprietary instruction set
 enum class Instruction {
     PUSH, POP, ADD, SUB, MUL, DIV, XOR, AND, OR, NOT,
     SHL, SHR, MOV, JMP, JZ, HLT, CUSTOM,
-    LOAD, STORE, CALL, RET, PTRACECHK, NOP, HALT
+    LOAD, STORE, CALL, RET, PTRACECHK, NOP, HALT,
+    
+    // Advanced protection instructions
+    ENCRYPT,    // Encryption operation
+    DECRYPT,    // Decryption operation
+    INJECT,     // Process injection
+    HIDE,       // Anti-detection
+    SLEEP,      // Anti-analysis sleep
+    DETECT,     // VM/Debugger detection
+    MORPH,      // Runtime code morphing
+    CONNECT,    // Network connection
+    PERSIST,    // System persistence
+    ELEVATE     // Privilege elevation
+};
+
+// Support structures - moved before VM class
+struct CodeBlock {
+    std::vector<uint8_t> code;
+    bool encrypted;
+    uint32_t originalSize;
+    uint32_t morphCount;
+};
+
+struct MorphRule {
+    std::vector<Instruction> pattern;
+    std::vector<Instruction> replacement;
+    float probability;
+};
+
+struct MemoryBlock {
+    void* ptr;
+    size_t size;
+    bool executable;
 };
 
 // VM Class
@@ -30,37 +67,53 @@ public:
     void loadExecutable(const std::string& filename);    // Load an executable file
     void execute();                       // Execute the loaded machine code
     void reset();                         // Reset the VM state for reuse
-    void emitDebugInfo();           // Print debug information about the loaded machine code
+    void emitDebugInfo();                // Print debug information
 
     void loadLibrary(const std::string& dllPath); // Load external DLL
-    void setHandler(std::string instruction, std::function<void()> handler); // Set custom handler for an instruction
+    void setHandler(std::string instruction, std::function<void()> handler); // Set custom handler
 
-    void startThreadedExecution(); // Start multi-threaded execution of loaded code
-
-    void trackExecutionTime(); // Track execution time for profiling
-    void emitExecutionStats(); // Emit profiling stats
+    void startThreadedExecution(); // Start multi-threaded execution
+    void trackExecutionTime();     // Track execution time
+    void emitExecutionStats();     // Emit profiling stats
 
     void handleCustomInstruction(Instruction instruction); // Handle custom instructions
-
-    void showHelp();
-    void showHexDump();
+    void showHelp();              // Show help message
+    void showHexDump();           // Show hex dump of code
 
 private:
-    std::vector<uint8_t> machineCode;     // Stores loaded machine code (up to 200 MB)
-    void* execMemory;                     // Pointer to allocated executable memory
-    size_t maxMemorySize;                 // Maximum memory size for the VM
-    std::map<Instruction, int> instructionCount; // Profiling: instruction execution counts
-    std::map<std::string, std::function<void()>> instructionHandlers; // Custom instruction handlers
-    std::mutex vmMutex;                   // Mutex for thread synchronization
+    std::vector<uint8_t> machineCode;     // Machine code storage
+    void* execMemory;                     // Executable memory pointer
+    size_t maxMemorySize;                 // Maximum memory size
+    std::map<Instruction, int> instructionCount; // Instruction counts
+    std::map<std::string, std::function<void()>> instructionHandlers; // Custom handlers
+    std::mutex vmMutex;                   // Thread synchronization
+    std::string filename;                 // Current file name
+    std::mt19937 rng;                     // Random number generator
 
-    std::string filename; // Add filename as a member variable
+    // Core VM operations
+    void allocateExecMemory(size_t size);
+    void releaseExecMemory();
+    void executeSingleThread();
+    void executeInThread();
+    Instruction translateMnemonic(const std::string& mnemonic);
 
-    void allocateExecMemory(size_t size); // Allocate executable memory
-    void releaseExecMemory();             // Release allocated memory
+    // Protection handlers
+    void handleEncryption(uint32_t& ip, std::vector<uint32_t>& stack);
+    void handleProcessInjection(uint32_t& ip, std::vector<uint32_t>& stack);
+    void handleAntiDetection(uint32_t& ip);
+    void handleSleep(uint32_t& ip);
+    void handleMorphing(uint32_t& ip, std::vector<uint32_t>& stack);
+    void handleShuffle(uint32_t& ip, std::vector<uint32_t>& stack);
+    void handleTrap(uint32_t& ip);
+    void handleOpaquePredicate(uint32_t& ip, std::vector<uint32_t>& stack);
+    void handleJumpTable(uint32_t& ip, std::vector<uint32_t>& stack);
+    void handleDebugCheck(uint32_t& ip);
 
-    void executeSingleThread(); // Execute in a single thread
-    void executeInThread();    // Wrapper function for multi-threaded execution
-    Instruction translateMnemonic(const std::string& mnemonic); // Translate obfuscated mnemonics to instructions
+    // Metamorphic engine methods
+    void applyMorphingRules(CodeBlock& block);
+    void applyRule(CodeBlock& block, const MorphRule& rule);
+    void shuffleBlock(std::vector<uint8_t>& block);
+    uint32_t generateRandom();
 };
 
 } // namespace myobfuscationvm
